@@ -1,23 +1,20 @@
 #!/usr/bin/bash
 #SBATCH --nodes=1
-#SBATCH --ntasks=16 --mem 16gb
+#SBATCH --ntasks=32 --mem 64gb
 #SBATCH --output=logs/annotfunc.%a.log
-#SBATCH --time=2-0:00:00
+#SBATCH --time=5-0:00:00
 #SBATCH -p intel -J annotfunc
 
 module unload miniconda2
-module unload miniconda3
-module unload perl
-module unload python
-module load funannotate/1.8.2
+module load funannotate
 module load phobius
 
-export FUNANNOTATE_DB=/bigdata/stajichlab/shared/lib/funannotate_db
+#export FUNANNOTATE_DB=/bigdata/stajichlab/shared/lib/funannotate_db
 CPUS=$SLURM_CPUS_ON_NODE
 OUTDIR=annotate
 INDIR=genomes
 SAMPFILE=samples.csv
-BUSCO=fungi_odb10
+BUSCO=metazoa_odb10
 
 if [ -z $CPUS ]; then
   CPUS=1

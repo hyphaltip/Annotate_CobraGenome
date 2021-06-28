@@ -1,18 +1,18 @@
 #!/bin/bash
-#SBATCH -p batch --time 3-0:00:00 --ntasks 16 --nodes 1 --mem 24G --out logs/predict.%a.log
+#SBATCH -p batch --time 3-0:00:00 --ntasks 24 --nodes 1 --mem 96G --out logs/predict.%a.log -J CobraPredict
 
 module unload miniconda2
-module unload anaconda3
-module unload perl
-module unload python
-module load funannotate/1.8.2
+module load funannotate
 
 CPU=1
 if [ $SLURM_CPUS_ON_NODE ]; then
     CPU=$SLURM_CPUS_ON_NODE
 fi
 
-BUSCO=fungi_odb10 # This could be changed to the core BUSCO set you want to use
+BUSCO=metazoa_odb10 # This could be changed to the core BUSCO set you want to use
+# this could be set to your custom DB as well
+INFORMANT=$FUNANNOTATE_DB/uniprot_sprot.fasta
+
 INDIR=genomes
 OUTDIR=annotate
 PREDS=$(realpath prediction_support)
@@ -37,13 +37,14 @@ fi
 export AUGUSTUS_CONFIG_PATH=$(realpath lib/augustus/3.3/config)
 
 export FUNANNOTATE_DB=/bigdata/stajichlab/shared/lib/funannotate_db
-# make genemark key link required to run it
-if [ ! -s ~/.gm_key ]; then
-	module  load    genemarkESET/4.38
-	GMFOLDER=`dirname $(which gmhmme3)`
-  ln -s $GMFOLDER/.gm_key ~/.gm_key
-  module unload genemarkESET
-fi
+#make genemark key link required to run it
+# this is now fixed as part of module load system, unneeded
+#if [ ! -s ~/.gm_key ]; then
+#	module  load    genemarkESET/4.38
+#	GMFOLDER=`dirname $(which gmhmme3)`
+#  ln -s $GMFOLDER/.gm_key ~/.gm_key
+#  module unload genemarkESET
+#fi
 SEED_SPECIES=anidulans
 
 IFS=,
@@ -62,12 +63,12 @@ do
     if [[ -f $PREDS/$BASE.genemark.gtf ]]; then
     funannotate predict --cpus $CPU --keep_no_stops --SeqCenter $SEQCENTER --busco_db $BUSCO --optimize_augustus \
         --strain $STRAIN --min_training_models 100 --AUGUSTUS_CONFIG_PATH $AUGUSTUS_CONFIG_PATH \
-        -i ../$INDIR/$BASE.masked.fasta --name $LOCUSTAG --protein_evidence ../lib/informant.aa \
+        -i ../$INDIR/$BASE.masked.fasta --name $LOCUSTAG --protein_evidence $INFORMANT \
         -s "$SPECIES"  -o ../$OUTDIR/$BASE --busco_seed_species $SEED_SPECIES --genemark_gtf $PREDS/$BASE.genemark.gtf
     else
     funannotate predict --cpus $CPU --keep_no_stops --SeqCenter $SEQCENTER --busco_db $BUSCO --optimize_augustus \
 	--strain $STRAIN --min_training_models 100 --AUGUSTUS_CONFIG_PATH $AUGUSTUS_CONFIG_PATH \
-	-i ../$INDIR/$BASE.masked.fasta --name $LOCUSTAG --protein_evidence ../lib/informant.aa \
+	-i ../$INDIR/$BASE.masked.fasta --name $LOCUSTAG --protein_evidence $INFORMANT \
 	-s "$SPECIES"  -o ../$OUTDIR/$BASE --busco_seed_species $SEED_SPECIES
     fi
     popd
