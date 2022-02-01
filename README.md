@@ -4,7 +4,7 @@ Project template for doing a funannotate annotation set.
 To use this do not clone it directly, but instead use the 'use this template' to create your own repository from this repo.
 
 # Repeat Masking
-
+(skipped in this instance since deposited genome is already masked)
 ```bash
 sbatch -a 1-2 01_mask_denovo.sh
 ```
